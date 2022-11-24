@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "replica-my-poison-bot"
+version = "0.1.0"
+description = "replica"
+authors = ["Igor O."]
+license = "none"
+readme = "README.md"
+packages = [{include = "replica_my_poison_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-dotenv = "0.20.0"
+aiogram = "^3.0.0b3"
+pyaes = "1.6.1"
+PySocks = "1.7.1"
+TgCrypto = "1.2.4"
+lxml = "4.9.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
