@@ -1,0 +1,14 @@
+Django==3.2
+djangorestframework==3.13.1
+frozenlist==1.3.1
+gunicorn==20.1.0
+idna==3.4
+multidict==6.0.2
+Pillow==9.2.0
+psycopg2-binary==2.9.3
+pyaes==1.6.1
+PySocks==1.7.1
+python-dotenv==0.20.0
+pytz==2022.5
+sqlparse==0.4.2
+yarl==1.8.1

@@ -31,7 +31,7 @@ order_cost_2="<strong>👾Введите стоимость товаров в ю
 
 instruction='Инструкция'
 
-url_instruction='https://ya.ru'
+url_instruction='https://telegra.ph/Kak-oformit-zakaz-cherez-bota-11-03'
 
 order_calc='<strong>😼Расчёт:</strong>\n\
 <strong>{total:0.1f} рублей</strong>\n\

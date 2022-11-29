@@ -12,10 +12,8 @@ from keyboards.inline_kb import keyboard_instruction
 from messages_data import message as mes
 from fsm_states_groups import GoodsForm
 from utils import config
+from utils.rate import rate
 
-
-RATE_CNY = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
-RATE = RATE_CNY['Valute']['CNY']['Value']/10
 
 router = Router()
 bot = Bot(token=config.TELEGRAM_TOKEN, parse_mode="HTML")
@@ -81,9 +79,9 @@ async def linksgoods(m: Message, state: FSMContext):
         await m.answer(text=mes.error_again, reply_markup=keyboard_cancel())
         return
     data = await state.get_data()
-    rate = RATE
-    total = int(data['cost']) * int(data['count']) * rate + 500
-    await m.answer(text=mes.order_calc.format(total=total, rate=rate), reply_markup=keyboard_order())
+    r = rate(config.VALUTE)
+    total = int(data['cost']) * int(data['count']) * r + 500
+    await m.answer(text=mes.order_calc.format(total=total, rate=r), reply_markup=keyboard_order())
     await state.set_state(GoodsForm.next_link)
 
 
@@ -103,7 +101,6 @@ async def order_cancel(m: Message, state: FSMContext):
 async def accept(m: Message, state: FSMContext):
     await state.update_data(link=m.text)
     data = await state.get_data()
-    print(data['link'])
     await m.answer(text=mes.order_accept, reply_markup=keyboard_order_accept())
     await state.set_state(GoodsForm.send)
 
@@ -136,8 +133,8 @@ async def size(m: Message, state: FSMContext):
 @router.message(GoodsForm.accept, Text(text=mes.agree_btn))
 async def success_agree(m: Message, state: FSMContext):
     data = await state.get_data()
-    rate = RATE
-    total = int(data['cost']) * int(data['count']) * rate + 500
+    r = rate(config.VALUTE)
+    total = int(data['cost']) * int(data['count']) * r + 500
     await bot.send_message(config.ADMIN_TELEGRAM_ID, text=mes.order_user.format(
         user=m.from_user.id,
         user_full=m.from_user.full_name,
@@ -145,7 +142,7 @@ async def success_agree(m: Message, state: FSMContext):
         cost=data['cost'],
         size=data['size'],
         link=data['link'],
-        rate=rate,
+        rate=r,
         total=total),
         parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard_order_accept())
     await m.answer(text=mes.success_order, disable_web_page_preview=True, reply_markup=keyboard_agree())
