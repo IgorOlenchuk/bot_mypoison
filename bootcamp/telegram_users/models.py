@@ -41,22 +41,22 @@ class Settings(models.Model):
 
 class Order(models.Model):
 
-    order = models.IntegerField(unique=True, primary_key=True, verbose_name='ID')
     user = models.ForeignKey(
         TelegramUser,
         on_delete=models.CASCADE,
         related_name='models',
-        verbose_name='Пользователь'
+        verbose_name='Покупатель'
     )
-    cost = models.CharField(max_length=150, null=True, blank=True, verbose_name='Стоимсоть')
-    size = models.CharField(max_length=150, null=True, blank=True, verbose_name='Рвзмер')
+    cost = models.CharField(max_length=150, null=True, blank=True, verbose_name='Стоимость за единицу в валюте')
+    count = models.CharField(max_length=150, null=True, blank=True, verbose_name='Количество')
+    size = models.CharField(max_length=150, null=True, blank=True, verbose_name='Размер')
     link = models.CharField(max_length=150, null=True, blank=True, verbose_name='Ссылка')
-    photo = models.CharField(max_length=150, null=True, blank=True, verbose_name='Фото')
-    insure = models.CharField(max_length=150, null=True, blank=True, verbose_name='Страховка')
+    total_cost = models.CharField(max_length=150, null=True, blank=True, verbose_name='Итоговая стоимость в руб.')
+    order_date = models.DateTimeField(default=timezone.now, verbose_name='Дата заказа', db_index=True)
     
     class Meta:
-        ordering = ('order',)
-        verbose_name = 'Заказ'
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
 
-    def __int__(self):
-        return self.order
+    def __str__(self):
+        return f'Дата заказа {self.order_date}'

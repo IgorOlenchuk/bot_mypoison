@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import user_post, user_get, user_ids_list, user_respondents_list, order, settings
+from .views import user_post, user_get, user_ids_list, user_respondents_list, order, settings, order_post
 
 app_name = 'telegram_users'
 
@@ -11,6 +11,6 @@ urlpatterns = [
     path('users/respondents/', user_respondents_list,
          name='user_respondents_list'),
     path('users/<int:pk>/', user_get, name='user_get'),
-    path('users/<int:pk>/order/', order, name='order'),
+    path('users/<int:pk>/order/', order_post, name='order_post'),
     path('settings/<int:pk>/', settings, name='settings'),
 ]

@@ -12,7 +12,7 @@ from keyboards.inline_kb import keyboard_instruction
 from messages_data import message as mes
 from fsm_states_groups import GoodsForm
 from utils import config
-from utils.utils import get_data
+from utils.utils import get_data, post_data
 from utils.rate import rate
 from utils.settings import settings, comission, rate
 
@@ -139,6 +139,15 @@ async def success_agree(m: Message, state: FSMContext):
     data = await state.get_data()
     r = await rate(valute=config.VALUTE)
     total = await settings(valute=config.VALUTE, cost=data['cost'], count=data['count'])
+    url=f'{DB_API_URL}users/{m.from_user.id}/order/'
+    await post_data(url=url, json={
+        "user": m.from_user.id,
+        "count": data['count'],
+        "cost": data['cost'],
+        "size": data['size'],
+        "link": data['link'],
+        "total_cost": int(total)}
+        )
     respondents = await get_data(f'{DB_API_URL}users/respondents/')
     for id in respondents:
         await bot.send_message(id, text=mes.order_user.format(

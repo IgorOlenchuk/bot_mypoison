@@ -37,10 +37,20 @@ def user_respondents_list(request):
 
 
 @api_view(['GET'])
-def order(request):
-    orders = get_object_or_404(Order, pk=pk)
-    serializer = OrderSerializerGet(user)
+def order(request, pk):
+    orders = get_object_or_404(Order)
+    serializer = OrderSerializerGet(orders)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def order_post(request, pk):
+    serializer = OrderSerializerPost(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -49,12 +59,3 @@ def settings(request, pk):
     serializer = SettingsSerializerGet(settings)
     return Response(serializer.data)
 
-
-@api_view(['POST'])
-def order_post(request):
-    serializer = OrderSerializerPost(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
