@@ -23,3 +23,40 @@ class TelegramUser(models.Model):
 
     def __str__(self):
         return self.tg_name
+
+
+class Settings(models.Model):
+
+    id = models.IntegerField(unique=True, primary_key=True, verbose_name='ID')
+    k_yuany = models.FloatField(null=True, blank=True, verbose_name='Коэф-т к курсы')
+    k_comis_1 = models.IntegerField(null=True, blank=True, verbose_name='Коммиссия 1')
+    k_comis_2 = models.IntegerField(null=True, blank=True, verbose_name='Коммиссия 2')
+    
+    class Meta:
+        verbose_name = 'Настройки'
+
+    def __int__(self):
+        return self.id
+
+
+class Order(models.Model):
+
+    order = models.IntegerField(unique=True, primary_key=True, verbose_name='ID')
+    user = models.ForeignKey(
+        TelegramUser,
+        on_delete=models.CASCADE,
+        related_name='models',
+        verbose_name='Пользователь'
+    )
+    cost = models.CharField(max_length=150, null=True, blank=True, verbose_name='Стоимсоть')
+    size = models.CharField(max_length=150, null=True, blank=True, verbose_name='Рвзмер')
+    link = models.CharField(max_length=150, null=True, blank=True, verbose_name='Ссылка')
+    photo = models.CharField(max_length=150, null=True, blank=True, verbose_name='Фото')
+    insure = models.CharField(max_length=150, null=True, blank=True, verbose_name='Страховка')
+    
+    class Meta:
+        ordering = ('order',)
+        verbose_name = 'Заказ'
+
+    def __int__(self):
+        return self.order

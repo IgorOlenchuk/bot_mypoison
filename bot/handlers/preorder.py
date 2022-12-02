@@ -13,10 +13,12 @@ from messages_data import message as mes
 from fsm_states_groups import GoodsForm_2
 from utils import config
 from utils.rate import rate
-
+from utils.utils import get_data
+from utils.settings import settings, comission, rate
 
 router = Router()
 bot = Bot(token=config.TELEGRAM_TOKEN, parse_mode="HTML")
+DB_API_URL = config.DB_API_URL
 
 
 @router.message(Text(text=mes.price_calculator_btn))
@@ -60,9 +62,10 @@ async def linksgoods(m: Message, state: FSMContext):
         await m.answer(text=mes.error_again, reply_markup=keyboard_cancel())
         return
     data = await state.get_data()
-    r = rate(config.VALUTE)
-    sum = int(data['cost']) * int(data['count']) * r + 500
-    await m.answer(text=mes.order_calc_2.format(sum=sum, p=int(data['cost']), c=int(data['count']), r=r), reply_markup=keyboard_order())
+    sum = await settings(valute=config.VALUTE, cost=data['cost'], count=data['count'])
+    com = await comission()
+    r = await rate(valute=config.VALUTE)
+    await m.answer(text=mes.order_calc_2.format(sum=sum, p=int(data['cost']), c=int(data['count']), r=r, comission=com), reply_markup=keyboard_order())
     await state.set_state(GoodsForm_2.next_link)
 
 
@@ -118,19 +121,21 @@ async def size(m: Message, state: FSMContext):
 @router.message(GoodsForm_2.accept, Text(text=mes.agree_btn))
 async def success_agree(m: Message, state: FSMContext):
     data = await state.get_data()
-    r = rate(config.VALUTE)
-    total = int(data['cost']) * int(data['count']) * r + 500
-    await bot.send_message(config.ADMIN_TELEGRAM_ID, text=mes.order_user.format(
-        user=m.from_user.id,
-        user_full=m.from_user.full_name,
-        count=data['count'],
-        cost=data['cost'],
-        size=data['size'],
-        link=data['link'],
-        rate=r,
-        total=total),
-        parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard_order_accept())
-    await m.answer(text=mes.success_order, disable_web_page_preview=True, reply_markup=keyboard_agree())
+    total = await settings(valute=config.VALUTE, cost=data['cost'], count=data['count'])
+    r = await rate(valute=config.VALUTE)
+    respondents = await get_data(f'{DB_API_URL}users/respondents/')
+    for id in respondents:
+        await bot.send_message(id, text=mes.order_user.format(
+            user=m.from_user.id,
+            user_full=m.from_user.full_name,
+            count=data['count'],
+            cost=data['cost'],
+            size=data['size'],
+            link=data['link'],
+            rate=r,
+            total=total),
+            parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard_order_accept())
+    await m.answer(text=mes.success_order, disable_web_page_preview=True, reply_markup=keyboard_main_menu())
 
 
 @router.message(Text(text=mes.place_an_order_btn))
