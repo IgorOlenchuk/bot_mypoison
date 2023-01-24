@@ -12,13 +12,14 @@ from keyboards.inline_kb import keyboard_instruction
 from messages_data import message as mes
 from fsm_states_groups import GoodsForm
 from utils import config
+from utils.utils import get_data, post_data
+from utils.rate import rate
+from utils.settings import settings, comission, rate
 
-
-RATE_CNY = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
-RATE = RATE_CNY['Valute']['CNY']['Value']/10
 
 router = Router()
 bot = Bot(token=config.TELEGRAM_TOKEN, parse_mode="HTML")
+DB_API_URL = config.DB_API_URL
 
 
 @router.message(Text(text=mes.place_an_order_btn))
@@ -81,9 +82,10 @@ async def linksgoods(m: Message, state: FSMContext):
         await m.answer(text=mes.error_again, reply_markup=keyboard_cancel())
         return
     data = await state.get_data()
-    rate = RATE
-    total = int(data['cost']) * int(data['count']) * rate + 500
-    await m.answer(text=mes.order_calc.format(total=total, rate=rate), reply_markup=keyboard_order())
+    r = await rate(valute=config.VALUTE)
+    total = await settings(valute=config.VALUTE, cost=data['cost'], count=data['count'])
+    com = await comission()
+    await m.answer(text=mes.order_calc.format(total=total, rate=r, comission=com), reply_markup=keyboard_order())
     await state.set_state(GoodsForm.next_link)
 
 
@@ -103,7 +105,6 @@ async def order_cancel(m: Message, state: FSMContext):
 async def accept(m: Message, state: FSMContext):
     await state.update_data(link=m.text)
     data = await state.get_data()
-    print(data['link'])
     await m.answer(text=mes.order_accept, reply_markup=keyboard_order_accept())
     await state.set_state(GoodsForm.send)
 
@@ -136,19 +137,30 @@ async def size(m: Message, state: FSMContext):
 @router.message(GoodsForm.accept, Text(text=mes.agree_btn))
 async def success_agree(m: Message, state: FSMContext):
     data = await state.get_data()
-    rate = RATE
-    total = int(data['cost']) * int(data['count']) * rate + 500
-    await bot.send_message(config.ADMIN_TELEGRAM_ID, text=mes.order_user.format(
-        user=m.from_user.id,
-        user_full=m.from_user.full_name,
-        count=data['count'],
-        cost=data['cost'],
-        size=data['size'],
-        link=data['link'],
-        rate=rate,
-        total=total),
-        parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard_order_accept())
-    await m.answer(text=mes.success_order, disable_web_page_preview=True, reply_markup=keyboard_agree())
+    r = await rate(valute=config.VALUTE)
+    total = await settings(valute=config.VALUTE, cost=data['cost'], count=data['count'])
+    url=f'{DB_API_URL}users/{m.from_user.id}/order/'
+    await post_data(url=url, json={
+        "user": m.from_user.id,
+        "count": data['count'],
+        "cost": data['cost'],
+        "size": data['size'],
+        "link": data['link'],
+        "total_cost": int(total)}
+        )
+    respondents = await get_data(f'{DB_API_URL}users/respondents/')
+    for id in respondents:
+        await bot.send_message(id, text=mes.order_user.format(
+            user=m.from_user.id,
+            user_full=m.from_user.full_name,
+            count=data['count'],
+            cost=data['cost'],
+            size=data['size'],
+            link=data['link'],
+            rate=r,
+            total=total),
+            parse_mode='HTML', disable_web_page_preview=True, reply_markup=keyboard_order_accept())
+    await m.answer(text=mes.success_order, disable_web_page_preview=True, reply_markup=keyboard_main_menu())
 
 
 @router.message(Text(text= mes.cancel_btn))
